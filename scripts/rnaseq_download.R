@@ -1,39 +1,34 @@
 # Load packages
-library("TCGAbiolinks")
-library("limma")
-library("edgeR")
-library("glmnet")
-library("factoextra")
-library("FactoMineR")
-library("caret")
-library("SummarizedExperiment")
-library("gplots")
-library("survival")
-library("survminer")
-library("RColorBrewer")
-library("gProfileR")
-library("genefilter")
+library(TCGAbiolinks)
+library(SummarizedExperiment)
+library(tidyverse)
 
+setwd("/data/abhay/brca/scripts")
+
+# get a list of projects
 GDCprojects = getGDCprojects()
-head(GDCprojects[c("project_id", "name")])
+getProjectSummary('TCGA-BRCA')
 
-TCGAbiolinks:::getProjectSummary("TCGA-BRCA")
+# build a query to retrieve gene expression data ------------
+query_brca <- GDCquery(project = 'TCGA-BRCA',
+                       data.category = 'Transcriptome Profiling',
+                       experimental.strategy = 'RNA-Seq',
+                       workflow.type = 'STAR - Counts',
+                       access = 'open')
 
-query_TCGA = GDCquery(
+query_clinical <- GDCquery(
   project = "TCGA-BRCA",
-  data.category = "Transcriptome Profiling", # parameter enforced by GDCquery
-  experimental.strategy = "RNA-Seq",
-  workflow.type = "HTSeq - Counts")
+  data.category = "Clinical",
+  data.type = "Clinical Supplement",
+  data.format = "BCR XML")
 
-brca_res = getResults(query_TCGA) # make results as table
-colnames(brca_res) 
-head(brca_res$sample_type)
-summary(factor(brca_res$sample_type))
+getResults(query_brca)
+getResults(query_clinical)
 
-query_TCGA = GDCquery(
-  project = "TCGA-BRCA",
-  data.category = "Transcriptome Profiling", # parameter enforced by GDCquery
-  experimental.strategy = "RNA-Seq",
-  workflow.type = "HTSeq - Counts",
-  sample.type = c("Primary Tumor", "Solid Tissue Normal"))
+# download data - GDCdownload
+GDCdownload(query_brca)
 
+# prepare data
+tcga_brca_data <- GDCprepare(query_brca, summarizedExperiment = TRUE)
+saveRDS(object = tcga_brca_data, file = "tcga_brca.RDS", compress = FALSE)
+tcga_brca_data = readRDS(file = "tcga_brca.RDS")
