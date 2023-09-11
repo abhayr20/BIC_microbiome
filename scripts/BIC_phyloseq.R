@@ -3,8 +3,9 @@ library("ggplot2")
 library("readxl")       
 library("dplyr")        
 library("tibble") 
+library("phyloseq")
 
-setwd("~/Desktop/AIIMS/BIC_microbiome")
+setwd("/data/abhay/brca")
 
 ######################################################
 # Phyloseq installation and documentation
@@ -55,6 +56,7 @@ ggplot(pcoa.df) +
 
 # Alpha-diversity clustering
 alpha_diversity<- estimate_richness(bic, split = TRUE, measures = NULL)
+write.csv(alpha_diversity, file = "results/brca_alpha_div.csv", col.names = T, row.names = T)
 
 
   
